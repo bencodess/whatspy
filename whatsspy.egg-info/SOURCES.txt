@@ -1,0 +1,9 @@
+README.md
+pyproject.toml
+whatsspy/__init__.py
+whatsspy/client.py
+whatsspy.egg-info/PKG-INFO
+whatsspy.egg-info/SOURCES.txt
+whatsspy.egg-info/dependency_links.txt
+whatsspy.egg-info/requires.txt
+whatsspy.egg-info/top_level.txt

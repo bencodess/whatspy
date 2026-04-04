@@ -1,0 +1,248 @@
+# WhatsSpy
+
+A Python wrapper for Baileys WhatsApp Web API. Simple, intuitive, and powerful.
+
+## Features
+
+- Send and receive messages
+- Manage contacts and groups
+- Send media (images, videos, documents)
+- Handle group participants
+- Block/unblock contacts
+- React to messages
+- And more...
+
+## Installation
+
+### Option 1: Using setup script (recommended)
+```bash
+chmod +x setup.sh
+./setup.sh
+source venv/bin/activate
+```
+
+### Option 2: Manual setup
+```bash
+python3 -m venv venv
+source venv/bin/activate
+pip install -e .
+```
+
+**Requirements:**
+- Python 3.10+
+- Node.js 18+
+- npm
+
+## Quick Start
+
+```python
+from whatsspy import WhatsSpyClient
+
+client = WhatsSpyClient(session_name="my_session")
+
+@client.on_message
+def handle_message(msg):
+    print(f"New message: {msg.text}")
+    if msg.text == "hello":
+        client.send_text(msg.jid, "Hi there!")
+
+@client.on_qr
+def handle_qr(qr):
+    print(f"Scan QR: {qr}")
+
+client.connect()
+```
+
+## API Reference
+
+### Client Initialization
+
+```python
+client = WhatsSpyClient(
+    session_name="my_session",  # Session folder name
+    session_dir="./sessions",   # Custom session directory
+    headless=True,              # Run browser headless
+    debug=False,                # Enable debug mode
+)
+```
+
+### Connecting
+
+```python
+# Synchronous
+client.connect()
+
+# Asynchronous
+import asyncio
+asyncio.run(client.connect_async())
+```
+
+### Sending Messages
+
+```python
+# Send text
+client.send_text("49123456789@s.whatsapp.net", "Hello World!")
+
+# Send with mentioned users
+client.send_text(jid, "Hello @user!", mentions=["49123456789@s.whatsapp.net"])
+
+# Reply to message
+client.reply(jid, "This is a reply", "message_id_here")
+
+# Send image
+client.send_image(jid, "https://example.com/image.jpg", caption="Check this out!")
+
+# Send video
+client.send_video(jid, "https://example.com/video.mp4", caption="Watch this!")
+
+# Send document
+client.send_document(jid, "https://example.com/file.pdf", "document.pdf")
+
+# React to message
+client.react(jid, "message_id_here", "👍")
+```
+
+### Receiving Messages
+
+```python
+@client.on_message
+def handle_message(msg):
+    print(f"From: {msg.jid}")
+    print(f"Text: {msg.text}")
+    print(f"ID: {msg.id}")
+    print(f"From me: {msg.from_me}")
+    print(f"Media URL: {msg.media_url}")
+```
+
+### Working with Events
+
+```python
+@client.on_connected
+def connected(jid):
+    print(f"Connected: {jid}")
+
+@client.on_disconnected
+def disconnected(reason):
+    print(f"Disconnected: {reason}")
+
+@client.on_qr
+def qr_received(qr):
+    print(f"QR: {qr}")
+```
+
+### Managing Contacts
+
+```python
+# Get all contacts
+contacts = client.get_contacts()
+for contact in contacts:
+    print(f"{contact.name} - {contact.jid}")
+
+# Get single contact
+contact = client.get_contact("49123456789@s.whatsapp.net")
+
+# Get avatar URL
+avatar_url = client.get_avatar("49123456789@s.whatsapp.net")
+
+# Block contact
+client.block_contact("49123456789@s.whatsapp.net")
+
+# Unblock contact
+client.unblock_contact("49123456789@s.whatsapp.net")
+
+# Get blocklist
+blocklist = client.get_blocklist()
+```
+
+### Managing Groups
+
+```python
+# Get all groups
+groups = client.get_groups()
+
+# Get group metadata
+metadata = client.get_group_metadata("group_jid@s.whatsapp.net")
+print(f"Name: {metadata.subject}")
+print(f"Participants: {len(metadata.participants)}")
+
+# Create group
+result = client.create_group("My Group", ["49123456789@s.whatsapp.net"])
+
+# Update group name
+client.update_group_name("group_jid@s.whatsapp.net", "New Name")
+
+# Update group description
+client.update_group_description("group_jid@s.whatsapp.net", "Group description")
+
+# Add participants
+client.add_participants("group_jid@s.whatsapp.net", ["49123456789@s.whatsapp.net"])
+
+# Remove participants
+client.remove_participants("group_jid@s.whatsapp.net", ["49123456789@s.whatsapp.net"])
+
+# Promote participants (to admin)
+client.promote_participants("group_jid@s.whatsapp.net", ["49123456789@s.whatsapp.net"])
+
+# Demote participants (remove admin)
+client.demote_participants("group_jid@s.whatsapp.net", ["49123456789@s.whatsapp.net"])
+
+# Leave group
+client.leave_group("group_jid@s.whatsapp.net")
+```
+
+### Message Utilities
+
+```python
+# Mark as read
+client.mark_read("49123456789@s.whatsapp.net")
+
+# Delete message
+client.delete_message("49123456789@s.whatsapp.net", "message_id")
+```
+
+### Disconnecting
+
+```python
+client.disconnect()
+# or
+client.logout()  # Also clears session
+```
+
+## Data Classes
+
+### Message
+
+- `id`: Message ID
+- `text`: Message text content
+- `from_me`: Whether message was sent by you
+- `media_url`: URL of attached media (if any)
+- `caption`: Caption of media (if any)
+- `jid`: Sender JID
+- `push_name`: Sender's push name
+
+### Contact
+
+- `jid`: Contact JID
+- `name`: Saved contact name
+- `push_name`: Contact's push name
+- `phone_number`: Contact's phone number
+- `is_group`: Whether this is a group
+- `is_business`: Whether this is a business account
+
+### GroupMetadata
+
+- `jid`: Group JID
+- `subject`: Group name
+- `owner`: Group owner's JID
+- `participants`: List of participants
+- `description`: Group description
+
+## Requirements
+
+- Python 3.10+
+- Node.js 18+
+- npm
+
+## License
+
+MIT License
