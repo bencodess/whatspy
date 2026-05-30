@@ -17,20 +17,17 @@ logger = logging.getLogger(__name__)
 
 def render_qr_ascii(qr_data: str) -> str:
     try:
-        qr = qrcode.QRCode(version=None, box_size=2, border=0)
+        from pathlib import Path
+        qr = qrcode.QRCode(version=None, box_size=10, border=4)
         qr.add_data(qr_data)
         qr.make(fit=True)
         img = qr.make_image(fill_color="black", back_color="white")
         
-        lines = []
-        for y in range(img.height):
-            line = ""
-            for x in range(img.width):
-                line += ("██" if img.getpixel((x, y)) else "  ")
-            lines.append(line)
+        qr_path = Path("qr_code.png")
+        img.save(str(qr_path))
         
-        return "\n".join(lines)
-    except Exception:
+        return f"QR code saved to: {qr_path.absolute()}"
+    except Exception as e:
         return f"QR: {qr_data[:50]}..."
 
 
@@ -458,14 +455,15 @@ process.on('SIGTERM', () => {
         asyncio.run(self._start_bridge_async())
 
     def _install_dependencies(self, dir_path: Path) -> None:
+        npm_path = r"C:\Users\Jannik\Documents\node-v24.15.0-win-x64\node-v24.15.0-win-x64\npm.cmd"
         subprocess.run(
-            ["npm", "init", "-y"],
+            [npm_path, "init", "-y"],
             cwd=str(dir_path),
             capture_output=True,
             check=True,
         )
         subprocess.run(
-            ["npm", "install", "@whiskeysockets/baileys"],
+            [npm_path, "install", "@whiskeysockets/baileys"],
             cwd=str(dir_path),
             capture_output=True,
             check=True,
