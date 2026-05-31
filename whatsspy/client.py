@@ -5,6 +5,7 @@ import os
 import signal
 import subprocess
 import tempfile
+import threading
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
@@ -157,6 +158,7 @@ class WhatsSpyClient:
         self._process: Optional[subprocess.Popen] = None
         self._event_callbacks: dict[str, list[Callable]] = {}
         self._connected = False
+        self._connected_event = threading.Event()
         self._loop: Optional[asyncio.AbstractEventLoop] = None
         self._read_task: Optional[asyncio.Task] = None
         self._auth_callback: Optional[Callable] = None
@@ -455,7 +457,7 @@ process.on('SIGTERM', () => {
         asyncio.run(self._start_bridge_async())
 
     def _install_dependencies(self, dir_path: Path) -> None:
-        npm_path = r"C:\Users\Jannik\Documents\node-v24.15.0-win-x64\node-v24.15.0-win-x64\npm.cmd"
+        npm_path = "npm"
         subprocess.run(
             [npm_path, "init", "-y"],
             cwd=str(dir_path),
@@ -581,16 +583,18 @@ process.on('SIGTERM', () => {
         await self._start_bridge_async()
         self._loop = asyncio.get_event_loop()
         self._read_task = self._loop.create_task(self._read_events())
+        self.on("connected", lambda data: self._on_connected(data))
         await self._send_command_async("connect", {
             "sessionDir": str(self.session_dir),
             "browser": self.browser,
             "headless": self.headless,
         })
+
+    def _on_connected(self, data: dict) -> None:
         self._connected = True
+        self._connected_event.set()
 
     def connect(self) -> None:
-        import threading
-        
         def run_loop():
             loop = asyncio.new_event_loop()
             asyncio.set_event_loop(loop)
@@ -603,16 +607,11 @@ process.on('SIGTERM', () => {
         
         self._loop_thread = threading.Thread(target=run_loop, daemon=True)
         self._loop_thread.start()
-        
-        for _ in range(50):
-            if self._connected:
-                break
-            import time
-            time.sleep(0.1)
+        self._connected_event.wait()
 
     async def _run_loop(self) -> None:
         await self.connect_async()
-        while self._connected and self._process and self._process.returncode is None:
+        while self._process and self._process.returncode is None:
             await asyncio.sleep(0.5)
 
     async def disconnect_async(self) -> None:
